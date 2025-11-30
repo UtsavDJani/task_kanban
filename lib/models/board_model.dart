@@ -1,18 +1,3 @@
-/*
-class Board {
-  String title;
-  List<String> tasks;
-
-  Board(this.title, this.tasks);
-
-  Board copyWith({String? title, List<String>? tasks}) {
-    return Board(
-      title ?? this.title,
-      tasks ?? List<String>.from(this.tasks),
-    );
-  }
-}*/
-
 
 import 'package:flutter/material.dart';
 import 'package:task_kanban/models/task_model.dart';
