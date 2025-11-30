@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:task_kanban/models/board_model.dart';
@@ -221,20 +219,18 @@ class KanbanController extends GetxController {
     final dragData = currentDragData.value!;
 
     if (boardIndex == dragData.fromBoard) {
-      if (hoverIndex != dragData.fromIndex) {
-        final task = boards[dragData.fromBoard].tasks.removeAt(dragData.fromIndex);
-
-        boards[boardIndex].tasks.insert(hoverIndex, task);
-
-        currentDragData.value = DraggedTask(task, boardIndex, hoverIndex);
-
-        boards.refresh();
+      if (hoverIndex != dragData.fromIndex && hoverIndex != hoveringIndex.value) {
+        hoveringIndex.value = hoverIndex;
       }
     } else {
       final task = boards[dragData.fromBoard].tasks.removeAt(dragData.fromIndex);
-      boards[boardIndex].tasks.insert(hoverIndex, task);
+      int insertIndex = hoverIndex;
+      if (dragData.fromBoard == boardIndex && dragData.fromIndex < hoverIndex) {
+        insertIndex--;
+      }
+      boards[boardIndex].tasks.insert(insertIndex, task);
 
-      currentDragData.value = DraggedTask(task, boardIndex, hoverIndex);
+      currentDragData.value = DraggedTask(task, boardIndex, insertIndex);
 
       boards.refresh();
     }
@@ -248,9 +244,18 @@ class KanbanController extends GetxController {
   }
 
   void onTaskAcceptedToPosition(DraggedTask dragData, int boardIndex, int taskIndex) {
+    if (dragData.fromBoard == boardIndex && dragData.fromIndex != taskIndex) {
+      final task = boards[boardIndex].tasks.removeAt(dragData.fromIndex);
+      int insertIndex = taskIndex;
+      if (dragData.fromIndex < taskIndex) {
+        insertIndex--;
+      }
+      boards[boardIndex].tasks.insert(insertIndex, task);
+      hoveringIndex.value = null;
+    }
+
     currentDragData.value = null;
     isDragging.value = false;
-    hoveringIndex.value = null;
     boards.refresh();
   }
 
@@ -263,6 +268,22 @@ class KanbanController extends GetxController {
   }
 
   void onDragEnd() {
+
+    final dragData = currentDragData.value;
+    if (dragData != null && hoveringIndex.value != null && isDragging.value) {
+      final hoverIndex = hoveringIndex.value!;
+
+      if (dragData.fromIndex != hoverIndex) {
+        final task = boards[dragData.fromBoard].tasks.removeAt(dragData.fromIndex);
+        int insertIndex = hoverIndex;
+        if (dragData.fromIndex < hoverIndex) {
+          insertIndex--;
+        }
+        boards[dragData.fromBoard].tasks.insert(insertIndex, task);
+        boards.refresh();
+      }
+    }
+
     currentDragData.value = null;
     isDragging.value = false;
     hoveringIndex.value = null;

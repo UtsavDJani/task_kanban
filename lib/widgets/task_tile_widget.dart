@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -29,9 +27,15 @@ class TaskTileWidget extends StatelessWidget {
           currentDrag.task.id == task.id &&
           controller.isDragging.value;
 
+      final isHovering = controller.hoveringIndex.value == taskIndex &&
+          currentDrag != null &&
+          currentDrag.fromBoard == boardIndex &&
+          !isBeingDragged;
+
       if (isBeingDragged) {
         return AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
           margin: const EdgeInsets.only(bottom: 12, left: 12, right: 12),
           height: 180,
           decoration: BoxDecoration(
@@ -40,6 +44,7 @@ class TaskTileWidget extends StatelessWidget {
             border: Border.all(
               color: Colors.grey.shade300,
               width: 2,
+              style: BorderStyle.solid,
             ),
           ),
           child: Center(
@@ -53,7 +58,7 @@ class TaskTileWidget extends StatelessWidget {
       }
 
       return Draggable<DraggedTask>(
-        key: ValueKey('$boardIndex-$taskIndex-${task.id}'),
+        key: ValueKey('draggable-${task.id}'),
         data: DraggedTask(task, boardIndex, taskIndex),
         feedback: Material(
           color: Colors.transparent,
@@ -76,7 +81,11 @@ class TaskTileWidget extends StatelessWidget {
           onMove: (DragTargetDetails<DraggedTask> details) {
             controller.onHoverPosition(boardIndex, taskIndex);
           },
-          onLeave: (_) {},
+          onLeave: (_) {
+            if (controller.hoveringIndex.value == taskIndex) {
+              controller.clearHoveringIndex();
+            }
+          },
           onAcceptWithDetails:
               (DragTargetDetails<DraggedTask> details) {
             controller.onTaskAcceptedToPosition(
@@ -87,14 +96,15 @@ class TaskTileWidget extends StatelessWidget {
           },
           builder: (context, candidateData, rejected) {
             return AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
+              duration: const Duration(milliseconds: 300),
               curve: Curves.easeInOut,
-              margin: const EdgeInsets.only(
-                bottom: 12,
+              margin: EdgeInsets.only(
+                bottom: isHovering ? 70 : 12,
+                top: 0,
                 left: 12,
                 right: 12,
               ),
-              child: _buildTaskCard(task, false, false),
+              child: _buildTaskCard(task, isHovering, false),
             );
           },
         ),
@@ -111,14 +121,18 @@ class TaskTileWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200, width: 1),
+        border: isHovering
+            ? Border.all(color: Colors.blue.shade400, width: 2)
+            : Border.all(color: Colors.grey.shade200, width: 1),
         boxShadow: [
           BoxShadow(
             color: isDragging
                 ? Colors.black.withValues(alpha: 0.3)
+                : isHovering
+                ? Colors.blue.withValues(alpha: 0.2)
                 : Colors.grey.withValues(alpha: 0.1),
-            blurRadius: isDragging ? 12 : 4,
-            offset: Offset(0, isDragging ? 6 : 2),
+            blurRadius: isDragging ? 12 : isHovering ? 8 : 4,
+            offset: Offset(0, isDragging ? 6 : isHovering ? 4 : 2),
           ),
         ],
       ),
@@ -225,7 +239,6 @@ class TaskTileWidget extends StatelessWidget {
 
           const SizedBox(height: 12),
 
-          // Footer
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(

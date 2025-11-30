@@ -1,5 +1,3 @@
-
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:task_kanban/models/drag_task.dart';
@@ -17,12 +15,14 @@ class BoardWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final KanbanController controller = Get.find<KanbanController>();
+    final screenWidth = MediaQuery.of(context).size.width;
 
     return Listener(
-      onPointerMove: (details) => controller.onPointerMove(
-        details,
-        MediaQuery.of(context).size.width,
-      ),
+      onPointerMove: (details) {
+        if (context.mounted) {
+          controller.onPointerMove(details, screenWidth);
+        }
+      },
       onPointerUp: controller.onPointerUp,
       child: Container(
         decoration: BoxDecoration(
@@ -161,6 +161,7 @@ class BoardWidget extends StatelessWidget {
                       itemCount: tasks.length,
                       itemBuilder: (context, taskIndex) {
                         return TaskTileWidget(
+                          key: ValueKey('task-${tasks[taskIndex].id}'),
                           boardIndex: boardIndex,
                           taskIndex: taskIndex,
                           task: tasks[taskIndex],
